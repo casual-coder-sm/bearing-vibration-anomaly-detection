@@ -1,0 +1,16 @@
+## install miniconda
+
+#1. Download miniconda from following location: 
+wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.1.0-1-Linux-x86_64.sh
+
+#2. Install Miniconda (ensure to activate conda at the end):
+sh ./Miniconda3-py310_23.1.0-1-Linux-x86_64.sh
+
+#3. Add to environment (Assuming using default installation path)
+export PATH=$PATH:/home/ubuntu/miniconda3/bin/conda
+
+#4. Disable default activation
+/home/ubuntu/miniconda3/bin/conda config --set auto_activate_base false
+
+#5. Restart terminal / Open new Shell then check conda command availability
+conda --version
