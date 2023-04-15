@@ -127,3 +127,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+Miniconda3-py310_23.1.0-1-Linux-x86_64.sh

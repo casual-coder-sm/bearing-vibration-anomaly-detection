@@ -17,4 +17,4 @@ conda --version
 
 #6. (Optional) Setup git. Reference: https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup
 
-sudo apt-get install -y python3 pip
+sudo apt-get install -y python3 python3-pip
