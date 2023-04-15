@@ -14,3 +14,7 @@ export PATH=$PATH:/home/ubuntu/miniconda3/bin/conda
 
 #5. Restart terminal / Open new Shell then check conda command availability
 conda --version
+
+#6. (Optional) Setup git. Reference: https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup
+
+sudo apt-get install -y python3 pip
