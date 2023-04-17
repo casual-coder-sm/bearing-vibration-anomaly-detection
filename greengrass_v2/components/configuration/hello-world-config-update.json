@@ -1,0 +1,8 @@
+{
+    "com.example.HelloWorld": {
+      "MERGE": {
+        "Message": "friend"
+      }
+    }
+}
+
