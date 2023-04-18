@@ -11,8 +11,13 @@ from enum import Enum
 class CODE_ENV(Enum):
     EC2=0 #Running in AWS EC2
     DEV=1 #Running in IOT Device
-    WIN=2 #Running in Win
-print(list(CODE_ENV))
+    WIN=2 #Running in Win    
+#print(list(CODE_ENV))
+
+class DATASET_ID(Enum):
+    First=0
+    Second=1
+    Third=2
 
 # %%
 def get_dataset_paths(code_env:CODE_ENV)->dict:
@@ -71,34 +76,34 @@ def get_dataset_paths(code_env:CODE_ENV)->dict:
     col_names_2nd_3rd = ['b1_ch1', 'b2_ch2', 'b3_ch3', 'b4_ch4']
 
     dataset_details = {}
-    dataset_details['1st'] = {'col_names':col_names_1st}
-    dataset_details['2nd'] = {'col_names':col_names_2nd_3rd}
-    dataset_details['3rd'] = {'col_names':col_names_2nd_3rd}
+    dataset_details[DATASET_ID.First]  = {'col_names':col_names_1st}
+    dataset_details[DATASET_ID.Second] = {'col_names':col_names_2nd_3rd}
+    dataset_details[DATASET_ID.Third]  = {'col_names':col_names_2nd_3rd}
 
     if code_env == CODE_ENV.EC2:
-        dataset_details['1st']['paths']=s3_objects_1st_dataset
-        dataset_details['2nd']['paths']=s3_objects_2nd_dataset
-        dataset_details['3rd']['paths']=s3_objects_3rd_dataset
+        dataset_details[DATASET_ID.First]['paths']=s3_objects_1st_dataset
+        dataset_details[DATASET_ID.Second]['paths']=s3_objects_2nd_dataset
+        dataset_details[DATASET_ID.Third]['paths']=s3_objects_3rd_dataset
         #Verify variables
-        print('Number of files in 1st Dataset:', len(dataset_details['1st']['paths']), 'first file=', dataset_details['1st']['paths'][0].key)
-        print('Number of files in 2nd Dataset:', len(dataset_details['2nd']['paths']), 'first file=', dataset_details['2nd']['paths'][0].key)
-        print('Number of files in 3rd Dataset:', len(dataset_details['3rd']['paths']), 'first file=', dataset_details['3rd']['paths'][0].key)
+        print('Number of files in 1st Dataset:', len(dataset_details[DATASET_ID.First]['paths']), 'first file=', dataset_details[DATASET_ID.First]['paths'][0].key)
+        print('Number of files in 2nd Dataset:', len(dataset_details[DATASET_ID.Second]['paths']), 'first file=', dataset_details[DATASET_ID.Second]['paths'][0].key)
+        print('Number of files in 3rd Dataset:', len(dataset_details[DATASET_ID.Third]['paths']), 'first file=', dataset_details[DATASET_ID.Third]['paths'][0].key)
 
     elif code_env == CODE_ENV.WIN:
-        dataset_details['1st']['paths']=filelist_1st_dataset
-        dataset_details['2nd']['paths']=filelist_2nd_dataset
-        dataset_details['3rd']['paths']=filelist_3rd_dataset
+        dataset_details[DATASET_ID.First]['paths']=filelist_1st_dataset
+        dataset_details[DATASET_ID.Second]['paths']=filelist_2nd_dataset
+        dataset_details[DATASET_ID.Third]['paths']=filelist_3rd_dataset
         #Verify variables
-        print('Number of files in 1st Dataset:', len(dataset_details['1st']['paths']), 'first file=', dataset_details['1st']['paths'][0])
-        print('Number of files in 2nd Dataset:', len(dataset_details['2nd']['paths']), 'first file=', dataset_details['2nd']['paths'][0])
-        print('Number of files in 3rd Dataset:', len(dataset_details['3rd']['paths']), 'first file=', dataset_details['3rd']['paths'][0])
+        print('Number of files in 1st Dataset:', len(dataset_details[DATASET_ID.First]['paths']), 'first file=', dataset_details[DATASET_ID.First]['paths'][0])
+        print('Number of files in 2nd Dataset:', len(dataset_details[DATASET_ID.Second]['paths']), 'first file=', dataset_details[DATASET_ID.Second]['paths'][0])
+        print('Number of files in 3rd Dataset:', len(dataset_details[DATASET_ID.Third]['paths']), 'first file=', dataset_details[DATASET_ID.Third]['paths'][0])
     
     return dataset_details
 
 
 
 # %%
-def get_df(dataset_details:dict, dataset:str, file_index:int, code_env:CODE_ENV):
+def get_df(dataset_details:dict, dataset:DATASET_ID, file_index:int, code_env:CODE_ENV):
     df = pd.DataFrame()
     if code_env == CODE_ENV.EC2:
         s3_object = dataset_details[dataset]['paths'][file_index]
@@ -116,13 +121,13 @@ if __name__ == "__main__":
     #####################################################################################
     #***************IMP: Update coding environment********************
     #####################################################################################
-    code_env = CODE_ENV.WIN
+    code_env = CODE_ENV.EC2
 
     #Trial: collect filepath details
     dataset_details = get_dataset_paths(code_env)
 
     #Trial: Reading content of file
-    df = get_df(dataset_details, '1st', 0, code_env)
-    df.head()
+    df = get_df(dataset_details, DATASET_ID.First, 0, code_env)
+    print(df.head())
 
-
+# %%
