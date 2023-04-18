@@ -66,7 +66,7 @@ def calculate_clearence(df):
     return np.array(result)
 
 
-def time_features(code_env: CODE_ENV, dataset_details, id:DATASET_ID, select_columns:list):
+def get_time_features(code_env: CODE_ENV, dataset_details, id:DATASET_ID, select_columns:list):
     #time_features = ['mean','std','skew','kurtosis','entropy','rms','max','p2p', 'crest', 'clearence', 'shape', 'impulse']
     
     data = pd.DataFrame()   
@@ -107,7 +107,7 @@ def time_features(code_env: CODE_ENV, dataset_details, id:DATASET_ID, select_col
         df_clearence = pd.DataFrame(clearence, columns=[c+'_clearence' for c in select_columns])
         df_shape = pd.DataFrame(shape, columns=[c+'_shape' for c in select_columns])
         df_impulse = pd.DataFrame(impulse, columns=[c+'_impulse' for c in select_columns])
-        df_filename = pd.DataFrame([filename])
+        df_filename = pd.DataFrame([filename], columns=['filename'])
         df = pd.concat([df_filename, df_mean_abs, df_std, df_skew, df_kurtosis
                            ,df_entropy, df_rms, df_max, df_p2p, df_crest
                            ,df_clearence, df_shape, df_impulse]
@@ -116,39 +116,36 @@ def time_features(code_env: CODE_ENV, dataset_details, id:DATASET_ID, select_col
         if fileindex % 10 == 0:
             print('Processed ', fileindex, ' out of ', len(dataset_details[id]['paths']) )
 
-    data.index = pd.to_datetime(data.index, format='%Y.%m.%d.%H.%M.%S')
-    data = data.sort_index()
-
+    data['filename'] = pd.to_datetime(data['filename'], format='%Y.%m.%d.%H.%M.%S')
+    data = data.set_index('filename')    
     return data
 
 
 # %%
+if __name__ == "__main__":
+    #####################################################################################
+    #***************IMP: Update coding environment********************
+    #####################################################################################
+    code_env = CODE_ENV.EC2    
+    curr_dataset = DATASET_ID.First
+    
+    #Step 1 : Setup Data Source
+    dataset_paths = model_feedinput_pipeline.get_dataset_paths(code_env)
 
-#####################################################################################
-#***************IMP: Update coding environment********************
-#####################################################################################
-code_env = CODE_ENV.EC2
+    #Step 2 : Generate time features for the specified dataset and columns
+    select_input_stepsize= 3000
+    selected_columns = ['b1_ch1', 'b2_ch2', 'b3_ch3', 'b4_ch4']
+    if curr_dataset == DATASET_ID.First:
+        select_columns = {
+            1 : ['b1_ch1', 'b2_ch3', 'b3_ch5', 'b4_ch7'],
+            2 : ['b1_ch2', 'b2_ch4', 'b3_ch6', 'b4_ch8'],
+        }
+        selected_columns = select_columns[1]
+    print('columns chosen for training = ', selected_columns)
+    time_feature_data = get_time_features(code_env, dataset_paths, curr_dataset, selected_columns)
 
-select_input_stepsize= 3000
-curr_dataset = DATASET_ID.Second
-selected_columns = ['b1_ch1', 'b2_ch2', 'b3_ch3', 'b4_ch4']
-if curr_dataset == DATASET_ID.First:
-    select_columns = {
-        1 : ['b1_ch1', 'b2_ch3', 'b3_ch5', 'b4_ch7'],
-        2 : ['b1_ch2', 'b2_ch4', 'b3_ch6', 'b4_ch8'],
-    }
-    selected_columns = select_columns[1]
-print('columns chosen for training = ', selected_columns)
-time_feature_data_filename=['timefeatures_1st.csv', 'timefeatures_2nd.csv', 'timefeatures_3rd.csv']
-
-# %%
-dataset_paths = model_feedinput_pipeline.get_dataset_paths(code_env)
-time_feature_data = time_features(code_env, dataset_paths, curr_dataset, selected_columns)
-time_feature_data.to_csv(time_feature_data_filename[curr_dataset])
-
-
-# %%
-merged_data = pd.read_csv(time_feature_data_filename[curr_dataset])
-merged_data = merged_data.rename(columns={'Unnamed: 0':'time'})
-merged_data.set_index('time')
-merged_data.describe()
+    #Step 3 : Save Output
+    time_feature_data_filename=['timefeatures_1st.csv', 'timefeatures_2nd.csv', 'timefeatures_3rd.csv']
+    time_feature_data.to_csv(time_feature_data_filename[curr_dataset.value])
+    merged_data = pd.read_csv(time_feature_data_filename[curr_dataset.value])
+    merged_data.describe()
