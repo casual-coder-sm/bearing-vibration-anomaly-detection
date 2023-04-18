@@ -29,9 +29,11 @@ seed(10)
 tf.random.set_seed(10)
 
 
+
 # %%
 import model_feedinput_pipeline
 from model_feedinput_pipeline import CODE_ENV, DATASET_ID
+
 
 
 # %%
@@ -65,60 +67,69 @@ def calculate_clearence(df):
         result.append(r)
     return np.array(result)
 
+def get_time_feature(code_env: CODE_ENV, dataset_details, id:DATASET_ID, fileindex:int, select_columns:list):
+    filepath = dataset_details[id]['paths'][fileindex]
+    
+    #step1: get raw_data and associated filename
+    raw_data = model_feedinput_pipeline.get_df(dataset_details, id, fileindex, code_env)
+    raw_data = raw_data[select_columns]
+    if code_env == CODE_ENV.EC2:
+        filename = Path(filepath.key).name
+    elif code_env == CODE_ENV.WSL:
+        filename =  Path(filepath).name
+    
+    #step2 : Generate features
+    mean_abs = raw_data.abs().mean().to_numpy().reshape(1,len(select_columns))
+    std = raw_data.std().to_numpy().reshape(1,len(select_columns))
+    skew = raw_data.skew().to_numpy().reshape(1,len(select_columns))
+    kurtosis = raw_data.kurtosis().to_numpy().reshape(1,len(select_columns))
+    entropy = calculate_entropy(raw_data).reshape(1,len(select_columns))
+    rms = calculate_rms(raw_data).reshape(1,len(select_columns))
+    max_abs=raw_data.abs().max().to_numpy().reshape(1,len(select_columns))
+    p2p = calculate_p2p(raw_data).reshape(1,len(select_columns))
+    crest = (max_abs/rms)
+    clearence = calculate_clearence(raw_data).reshape(1,len(select_columns))
+    shape = (rms/mean_abs)
+    impulse = (max_abs/mean_abs)
+
+    #step3 : save to dataframe
+    df_mean_abs = pd.DataFrame(mean_abs, columns=[c+'_mean' for c in select_columns])
+    df_std = pd.DataFrame(std, columns=[c+'_std'  for c in select_columns])
+    df_skew = pd.DataFrame(skew, columns=[c+'_skew' for c in select_columns])
+    df_kurtosis = pd.DataFrame(kurtosis, columns=[c+'_kurtosis' for c in select_columns])
+    df_entropy = pd.DataFrame(entropy, columns=[c+'_entropy' for c in select_columns])
+    df_rms = pd.DataFrame(rms, columns=[c+'_rms' for c in select_columns])        
+    df_max = pd.DataFrame(max_abs, columns=[c+'_max' for c in select_columns])
+    df_p2p = pd.DataFrame(p2p, columns=[c+'_p2p' for c in select_columns])
+    df_crest = pd.DataFrame(crest, columns=[c+'_crest' for c in select_columns])
+    df_clearence = pd.DataFrame(clearence, columns=[c+'_clearence' for c in select_columns])
+    df_shape = pd.DataFrame(shape, columns=[c+'_shape' for c in select_columns])
+    df_impulse = pd.DataFrame(impulse, columns=[c+'_impulse' for c in select_columns])
+    df_filename = pd.DataFrame([filename], columns=['filename'])
+    df = pd.concat([df_filename, df_mean_abs, df_std, df_skew, df_kurtosis
+                        ,df_entropy, df_rms, df_max, df_p2p, df_crest
+                        ,df_clearence, df_shape, df_impulse]
+                        ,axis=1)
+    return df
+
 
 def get_time_features(code_env: CODE_ENV, dataset_details, id:DATASET_ID, select_columns:list):
     #time_features = ['mean','std','skew','kurtosis','entropy','rms','max','p2p', 'crest', 'clearence', 'shape', 'impulse']
     
     data = pd.DataFrame()   
     for fileindex, filepath in enumerate(dataset_details[id]['paths']):
-        #step1: get raw_data and associated filename
-        raw_data = model_feedinput_pipeline.get_df(dataset_details, id, fileindex, code_env)
-        raw_data = raw_data[select_columns]
-        if code_env == CODE_ENV.EC2:
-            filename = Path(filepath.key).name
-        elif code_env == CODE_ENV.WIN:
-            filename =  Path(filepath).name
-        
-        #step2 : Generate features
-        mean_abs = raw_data.abs().mean().to_numpy().reshape(1,len(select_columns))
-        std = raw_data.std().to_numpy().reshape(1,len(select_columns))
-        skew = raw_data.skew().to_numpy().reshape(1,len(select_columns))
-        kurtosis = raw_data.kurtosis().to_numpy().reshape(1,len(select_columns))
-        entropy = calculate_entropy(raw_data).reshape(1,len(select_columns))
-        rms = calculate_rms(raw_data).reshape(1,len(select_columns))
-        max_abs=raw_data.abs().max().to_numpy().reshape(1,len(select_columns))
-        p2p = calculate_p2p(raw_data).reshape(1,len(select_columns))
-        crest = (max_abs/rms)
-        clearence = calculate_clearence(raw_data).reshape(1,len(select_columns))
-        shape = (rms/mean_abs)
-        impulse = (max_abs/mean_abs)
-
-
-        #step3 : save to dataframe
-        df_mean_abs = pd.DataFrame(mean_abs, columns=[c+'_mean' for c in select_columns])
-        df_std = pd.DataFrame(std, columns=[c+'_std'  for c in select_columns])
-        df_skew = pd.DataFrame(skew, columns=[c+'_skew' for c in select_columns])
-        df_kurtosis = pd.DataFrame(kurtosis, columns=[c+'_kurtosis' for c in select_columns])
-        df_entropy = pd.DataFrame(entropy, columns=[c+'_entropy' for c in select_columns])
-        df_rms = pd.DataFrame(rms, columns=[c+'_rms' for c in select_columns])        
-        df_max = pd.DataFrame(max_abs, columns=[c+'_max' for c in select_columns])
-        df_p2p = pd.DataFrame(p2p, columns=[c+'_p2p' for c in select_columns])
-        df_crest = pd.DataFrame(crest, columns=[c+'_crest' for c in select_columns])
-        df_clearence = pd.DataFrame(clearence, columns=[c+'_clearence' for c in select_columns])
-        df_shape = pd.DataFrame(shape, columns=[c+'_shape' for c in select_columns])
-        df_impulse = pd.DataFrame(impulse, columns=[c+'_impulse' for c in select_columns])
-        df_filename = pd.DataFrame([filename], columns=['filename'])
-        df = pd.concat([df_filename, df_mean_abs, df_std, df_skew, df_kurtosis
-                           ,df_entropy, df_rms, df_max, df_p2p, df_crest
-                           ,df_clearence, df_shape, df_impulse]
-                           ,axis=1)
+        #get time feature
+        df = get_time_feature(code_env, dataset_details, id, fileindex, select_columns)
+        #concat with previous set
         data = pd.concat([data, df], axis=0)
+        #interactive reporting of progress
         if fileindex % 10 == 0:
             print('Processed ', fileindex, ' out of ', len(dataset_details[id]['paths']) )
 
     data['filename'] = pd.to_datetime(data['filename'], format='%Y.%m.%d.%H.%M.%S')
-    data = data.set_index('filename')    
+    data = data.set_index('filename')
     return data
+
 
 
 # %%
@@ -126,8 +137,8 @@ if __name__ == "__main__":
     #####################################################################################
     #***************IMP: Update coding environment********************
     #####################################################################################
-    code_env = CODE_ENV.EC2    
-    curr_dataset = DATASET_ID.First
+    code_env = CODE_ENV.WSL    
+    curr_dataset = DATASET_ID.Second
     
     #Step 1 : Setup Data Source
     dataset_paths = model_feedinput_pipeline.get_dataset_paths(code_env)
@@ -140,7 +151,7 @@ if __name__ == "__main__":
             1 : ['b1_ch1', 'b2_ch3', 'b3_ch5', 'b4_ch7'],
             2 : ['b1_ch2', 'b2_ch4', 'b3_ch6', 'b4_ch8'],
         }
-        selected_columns = select_columns[1]
+        selected_columns = select_columns[2]
     print('columns chosen for training = ', selected_columns)
     time_feature_data = get_time_features(code_env, dataset_paths, curr_dataset, selected_columns)
 
@@ -149,3 +160,5 @@ if __name__ == "__main__":
     time_feature_data.to_csv(time_feature_data_filename[curr_dataset.value])
     merged_data = pd.read_csv(time_feature_data_filename[curr_dataset.value])
     merged_data.describe()
+
+
