@@ -50,7 +50,7 @@ def get_dataset_paths(code_env:CODE_ENV)->dict:
         else:
             print('Path ERROR!!!', str(dataset_root_path1), str(dataset_root_path2))
         ##################################################################################
-               
+        
     
     #Step2 : collect 3 dataset file details
     if code_env == CODE_ENV.EC2:
@@ -92,18 +92,18 @@ def get_dataset_paths(code_env:CODE_ENV)->dict:
         dataset_details[DATASET_ID.Second]['paths']=s3_objects_2nd_dataset
         dataset_details[DATASET_ID.Third]['paths']=s3_objects_3rd_dataset
         #Verify variables
-        print('Number of files in 1st Dataset:', len(dataset_details[DATASET_ID.First]['paths']), 'first file=', dataset_details[DATASET_ID.First]['paths'][0].key)
-        print('Number of files in 2nd Dataset:', len(dataset_details[DATASET_ID.Second]['paths']), 'first file=', dataset_details[DATASET_ID.Second]['paths'][0].key)
-        print('Number of files in 3rd Dataset:', len(dataset_details[DATASET_ID.Third]['paths']), 'first file=', dataset_details[DATASET_ID.Third]['paths'][0].key)
+        #print('Number of files in 1st Dataset:', len(dataset_details[DATASET_ID.First]['paths']), 'first file=', dataset_details[DATASET_ID.First]['paths'][0].key)
+        #print('Number of files in 2nd Dataset:', len(dataset_details[DATASET_ID.Second]['paths']), 'first file=', dataset_details[DATASET_ID.Second]['paths'][0].key)
+        #print('Number of files in 3rd Dataset:', len(dataset_details[DATASET_ID.Third]['paths']), 'first file=', dataset_details[DATASET_ID.Third]['paths'][0].key)
 
     elif code_env == CODE_ENV.WSL:
         dataset_details[DATASET_ID.First]['paths']=filelist_1st_dataset
         dataset_details[DATASET_ID.Second]['paths']=filelist_2nd_dataset
         dataset_details[DATASET_ID.Third]['paths']=filelist_3rd_dataset
         #Verify variables
-        print('Number of files in 1st Dataset:', len(dataset_details[DATASET_ID.First]['paths']), 'first file=', dataset_details[DATASET_ID.First]['paths'][0])
-        print('Number of files in 2nd Dataset:', len(dataset_details[DATASET_ID.Second]['paths']), 'first file=', dataset_details[DATASET_ID.Second]['paths'][0])
-        print('Number of files in 3rd Dataset:', len(dataset_details[DATASET_ID.Third]['paths']), 'first file=', dataset_details[DATASET_ID.Third]['paths'][0])
+        #print('Number of files in 1st Dataset:', len(dataset_details[DATASET_ID.First]['paths']), 'first file=', dataset_details[DATASET_ID.First]['paths'][0])
+        #print('Number of files in 2nd Dataset:', len(dataset_details[DATASET_ID.Second]['paths']), 'first file=', dataset_details[DATASET_ID.Second]['paths'][0])
+        #print('Number of files in 3rd Dataset:', len(dataset_details[DATASET_ID.Third]['paths']), 'first file=', dataset_details[DATASET_ID.Third]['paths'][0])
     
     return dataset_details
 

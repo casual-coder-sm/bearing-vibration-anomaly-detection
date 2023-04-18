@@ -13,21 +13,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set(color_codes=True)
 
-from sklearn.preprocessing import MinMaxScaler
 from scipy.stats import entropy
-
-
-
-import tensorflow as tf
-#tf.logging.set_verbosity(tf.logging.ERROR)
-
-from keras.layers import Input, Dropout, Dense, LSTM, TimeDistributed, RepeatVector
-from keras.models import Model
-from keras import regularizers
-
-seed(10)
-tf.random.set_seed(10)
-
 
 
 # %%
@@ -160,5 +146,7 @@ if __name__ == "__main__":
     time_feature_data.to_csv(time_feature_data_filename[curr_dataset.value])
     merged_data = pd.read_csv(time_feature_data_filename[curr_dataset.value])
     merged_data.describe()
+
+    
 
 
