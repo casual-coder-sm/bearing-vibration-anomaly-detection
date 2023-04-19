@@ -1,6 +1,6 @@
 # %%
 import os
-import joblib
+from sys import path as sys_path
 from pathlib import Path
 
 import pandas as pd
@@ -17,9 +17,20 @@ from scipy.stats import entropy
 
 
 # %%
+curr_dir = os.getcwd()
+#check in the order sub-directory to main-directory
+if 'autoencoder_lstm' in  curr_dir:
+    os.chdir('..')
+if 'models' in curr_dir in curr_dir:
+    pass
+elif 'bearing-vibration-anomaly-detection' in curr_dir:
+    os.chdir('./models')
+curr_dir = os.getcwd()
+
+sys_path.insert(0, curr_dir)
+
 import model_feedinput_pipeline
 from model_feedinput_pipeline import CODE_ENV, DATASET_ID
-
 
 
 # %%
@@ -145,7 +156,6 @@ if __name__ == "__main__":
     time_feature_data_filename=['timefeatures_1st.csv', 'timefeatures_2nd.csv', 'timefeatures_3rd.csv']
     time_feature_data.to_csv(time_feature_data_filename[curr_dataset.value])
     merged_data = pd.read_csv(time_feature_data_filename[curr_dataset.value])
-    merged_data.describe()
 
     
 
