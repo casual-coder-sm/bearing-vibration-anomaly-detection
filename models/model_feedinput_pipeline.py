@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 import pandas as pd
 
-import boto3
 from io import BytesIO
 
 
@@ -29,6 +28,7 @@ def get_dataset_paths(code_env:CODE_ENV)->dict:
         #To access 's3' without any access key embedded folloWSLg dependencies shall be met:
         # 1. Policy for user : Allow-S3-Passrole-to-EC2, AmazonS3FullAccess
         # 2. Role            : S3Admin
+        import boto3
         aws_s3 = boto3.resource('s3')
         s3_bucket = aws_s3.Bucket('anomaly-detection-from-bearing-vibration-project-bucket')
         s3_bucket_objects=[]
@@ -50,6 +50,10 @@ def get_dataset_paths(code_env:CODE_ENV)->dict:
         else:
             print('Path ERROR!!!', str(dataset_root_path1), str(dataset_root_path2))
         ##################################################################################
+    elif code_env == CODE_ENV.DEV:
+        dataset_root_path = Path('/root/datasets/phm-ims-datasets')
+        if not dataset_root_path.is_dir():
+            print('Check Folder path = ', dataset_root_path.as_posix())
         
     
     #Step2 : collect 3 dataset file details
@@ -68,7 +72,7 @@ def get_dataset_paths(code_env:CODE_ENV)->dict:
                     s3_objects_2nd_dataset.append(s3_object)
                 else:
                     s3_objects_3rd_dataset.append(s3_object)
-    elif code_env == CODE_ENV.WSL:
+    elif code_env == CODE_ENV.WSL or code_env == CODE_ENV.DEV:
         data_set1_path = dataset_root_path.as_posix() + '/1st_test'
         data_set2_path = dataset_root_path.as_posix() + '/2nd_test'
         data_set3_path = dataset_root_path.as_posix() + '/3rd_test'
@@ -96,7 +100,7 @@ def get_dataset_paths(code_env:CODE_ENV)->dict:
         #print('Number of files in 2nd Dataset:', len(dataset_details[DATASET_ID.Second]['paths']), 'first file=', dataset_details[DATASET_ID.Second]['paths'][0].key)
         #print('Number of files in 3rd Dataset:', len(dataset_details[DATASET_ID.Third]['paths']), 'first file=', dataset_details[DATASET_ID.Third]['paths'][0].key)
 
-    elif code_env == CODE_ENV.WSL:
+    elif code_env == CODE_ENV.WSL or code_env == CODE_ENV.DEV:
         dataset_details[DATASET_ID.First]['paths']=filelist_1st_dataset
         dataset_details[DATASET_ID.Second]['paths']=filelist_2nd_dataset
         dataset_details[DATASET_ID.Third]['paths']=filelist_3rd_dataset
@@ -117,7 +121,7 @@ def get_df(dataset_details:dict, dataset:DATASET_ID, file_index:int, code_env:CO
         s3_object = dataset_details[dataset]['paths'][file_index]
         data = s3_object.get()['Body'].read()
         df = pd.read_csv(BytesIO(data), header=None, delimiter='\t', names=dataset_details[dataset]['col_names'], low_memory='False')
-    elif code_env == CODE_ENV.WSL:
+    elif code_env == CODE_ENV.WSL or code_env == CODE_ENV.DEV:
         df = pd.read_csv(dataset_details[dataset]['paths'][file_index], header=None, delimiter='\t', names=dataset_details[dataset]['col_names'], low_memory='False')
     
     return df

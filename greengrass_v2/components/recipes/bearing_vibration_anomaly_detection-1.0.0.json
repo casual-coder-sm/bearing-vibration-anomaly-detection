@@ -1,0 +1,72 @@
+{
+    "RecipeFormatVersion": "2020-01-25",
+    "ComponentName": "bearing_vibration_anomaly_detection",
+    "ComponentVersion": "1.0.0",
+    "ComponentDescription": "Mimic IOT Device reading of bearing vibration to detect and report anomaly",
+    "ComponentPublisher": "Shailesh Marathe",
+    "ComponentConfiguration": {
+      "DefaultConfiguration": {
+        "Message": " ",
+        "accessControl": {
+            "aws.greengrass.ipc.mqttproxy": {
+              "collect_device_data:mqttproxy:1": {
+                "policyDescription": "Allows access to publish/subscribe to all topics.",
+                "operations": [
+                  "aws.greengrass#PublishToIoTCore",
+                  "aws.greengrass#SubscribeToIoTCore"
+                ],
+                "resources": [
+                  "*"
+                ]
+              }
+            }
+        }
+      }
+    },
+    "ComponentDependencies": {
+      "collect_device_data": {
+        "VersionRequirement": ">=1.0.0 < 2.0.0",
+        "DependencyType": "SOFT"
+      }
+    },
+    "Manifests": [
+      {
+        "Platform": {
+          "os": "linux"
+        },
+        "Lifecycle": {
+          "Install":{
+              "RequiresPrivilege":true,
+              "script": "python3 -m pip install --user awsiotsdk numpy pandas"
+          },
+          "Run": {
+            "RequiresPrivilege":true,
+            "script":"python3 -u {artifacts:path}/bearing_vibration_anomaly_detection.py \"{configuration:/Message}\""
+          }   
+        },
+        "Artifacts": [
+          {
+            "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/models.zip",
+            "Digest": "e8d519b8d43bf9a803592b067e06ee97b48b53c7ad17cfaa4aa73ddadfaf35e8",
+            "Algorithm": "SHA-256",
+            "Unarchive": "ZIP",
+            "Permission": {
+              "Read": "ALL",
+              "Execute": "ALL"
+            }
+          },
+          {
+            "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.0/bearing_vibration_anomaly_detection.py",
+            "Digest": "093f20eb57018708379d3fb3fc80566d4001b9bec10a1cc08352682d3d6935cd",
+            "Algorithm": "SHA-256",
+            "Unarchive": "NONE",
+            "Permission": {
+              "Read": "OWNER",
+              "Execute": "NONE"
+            }
+          }
+        ]
+      }
+    ],
+    "Lifecycle": {}    
+  }

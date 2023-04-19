@@ -3,7 +3,7 @@
   "ComponentName": "collect_device_data",
   "ComponentVersion": "1.1.1",
   "ComponentDescription": "Mimic IOT bearing vibration tracking device",
-  "ComponentPublisher": "Shailesh M",
+  "ComponentPublisher": "Shailesh Marathe",
   "ComponentConfiguration": {
     "DefaultConfiguration": {
       "Message": " ",
