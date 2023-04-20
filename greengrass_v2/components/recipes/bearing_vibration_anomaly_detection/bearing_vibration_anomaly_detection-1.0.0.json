@@ -6,7 +6,7 @@
     "ComponentPublisher": "Shailesh Marathe",
     "ComponentConfiguration": {
       "DefaultConfiguration": {
-        "Message": " ",
+        "Message": "1.0.0",
         "accessControl": {
             "aws.greengrass.ipc.mqttproxy": {
               "collect_device_data:mqttproxy:1": {
@@ -23,12 +23,6 @@
         }
       }
     },
-    "ComponentDependencies": {
-      "collect_device_data": {
-        "VersionRequirement": ">=1.0.0 < 2.0.0",
-        "DependencyType": "SOFT"
-      }
-    },
     "Manifests": [
       {
         "Platform": {
@@ -37,27 +31,27 @@
         "Lifecycle": {
           "Install":{
               "RequiresPrivilege":true,
-              "script": "python3 -m pip install --user awsiotsdk numpy pandas"
+              "script": "python3 -m pip install --user awsiotsdk"
           },
           "Run": {
             "RequiresPrivilege":true,
-            "script":"python3 -u {artifacts:path}/bearing_vibration_anomaly_detection.py \"{configuration:/Message}\""
+            "script":"sh -u {artifacts:path}/begin_mimic_devicesimulation.sh \"{configuration:/Message}\""
           }   
         },
         "Artifacts": [
           {
             "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/models.zip",
-            "Digest": "e8d519b8d43bf9a803592b067e06ee97b48b53c7ad17cfaa4aa73ddadfaf35e8",
+            "Digest": "6d5d1440563d139ac41aeca3fc6bc8061d2845065ab62182480a4c0ff6c6671a",
             "Algorithm": "SHA-256",
-            "Unarchive": "ZIP",
+            "Unarchive": "NONE",
             "Permission": {
               "Read": "ALL",
               "Execute": "ALL"
             }
           },
           {
-            "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.0/bearing_vibration_anomaly_detection.py",
-            "Digest": "093f20eb57018708379d3fb3fc80566d4001b9bec10a1cc08352682d3d6935cd",
+            "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.0/begin_mimic_devicesimulation.sh",
+            "Digest": "665d6e7db092ed881b4153a1b4dc59514081ada24a5a6a4f10c04424511c9b8c",
             "Algorithm": "SHA-256",
             "Unarchive": "NONE",
             "Permission": {

@@ -17,6 +17,10 @@ from scipy.stats import entropy
 
 
 # %%
+
+import sys
+from sys import path as sys_path
+
 curr_dir = os.getcwd()
 #check in the order sub-directory to main-directory
 if 'autoencoder_lstm' in  curr_dir:
@@ -26,7 +30,6 @@ if 'models' in curr_dir in curr_dir:
 elif 'bearing-vibration-anomaly-detection' in curr_dir:
     os.chdir('./models')
 curr_dir = os.getcwd()
-
 sys_path.insert(0, curr_dir)
 
 import model_feedinput_pipeline
@@ -72,7 +75,7 @@ def get_time_feature(code_env: CODE_ENV, dataset_details, id:DATASET_ID, fileind
     raw_data = raw_data[select_columns]
     if code_env == CODE_ENV.EC2:
         filename = Path(filepath.key).name
-    elif code_env == CODE_ENV.WSL:
+    elif code_env == CODE_ENV.WSL or code_env == CODE_ENV.DEV:
         filename =  Path(filepath).name
     
     #step2 : Generate features
@@ -131,12 +134,28 @@ def get_time_features(code_env: CODE_ENV, dataset_details, id:DATASET_ID, select
 
 # %%
 if __name__ == "__main__":
+
     #####################################################################################
     #***************IMP: Update coding environment********************
     #####################################################################################
     code_env = CODE_ENV.WSL    
     curr_dataset = DATASET_ID.Second
-    
+
+    comp_ver = ''
+    if len(sys.argv) > 1:
+        comp_ver = sys.argv[1]
+        
+        sys_code_env = int(sys.argv[2])
+        code_env = CODE_ENV(sys_code_env)
+
+        sys_dataset_id = int(sys.argv[3])
+        curr_dataset = DATASET_ID(sys_dataset_id)
+
+        print(comp_ver, code_env, curr_dataset)
+    else:
+        #For Win and EC2
+        pass
+
     #Step 1 : Setup Data Source
     dataset_paths = model_feedinput_pipeline.get_dataset_paths(code_env)
 

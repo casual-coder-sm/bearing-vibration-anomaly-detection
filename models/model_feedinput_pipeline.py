@@ -5,6 +5,21 @@ import pandas as pd
 
 from io import BytesIO
 
+from sys import path as sys_path
+
+
+# %%
+curr_dir = os.getcwd()
+#check in the order sub-directory to main-directory
+if 'autoencoder_lstm' in  curr_dir:
+    os.chdir('..')
+if 'models' in curr_dir in curr_dir:
+    pass
+elif 'bearing-vibration-anomaly-detection' in curr_dir:
+    os.chdir('./models')
+curr_dir = os.getcwd()
+sys_path.insert(0, curr_dir)
+
 
 # %%
 from enum import Enum
@@ -129,12 +144,17 @@ def get_df(dataset_details:dict, dataset:DATASET_ID, file_index:int, code_env:CO
 
 # %%
 if __name__ == "__main__":
+    import sys
     select_input_stepsize= 3000
 
     #####################################################################################
     #***************IMP: Update coding environment********************
     #####################################################################################
     code_env = CODE_ENV.WSL
+    if len(sys.argv) > 1:
+        sys_code_env = int(sys.argv[1])
+        code_env = CODE_ENV(sys_code_env)
+        print(code_env)
 
     #Trial: collect filepath details
     dataset_details = get_dataset_paths(code_env)
