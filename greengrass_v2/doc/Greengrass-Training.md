@@ -26,11 +26,11 @@ sudo /greengrass/v2/bin/greengrass-cli deployment create --remove="com.example.H
  . Restart
   /greengrass/v2/bin/greengrass-cli component restart -n=bearing_anomaly_detector 
 
-## Deploy using console 
-aws iam create-policy \
-  --policy-name gg-hello-world-artifact-policy \
-  --policy-document file://component-artifact-policy.json
+#Video Series
+1. https://www.youtube.com/watch?v=rLswsgz77I0&list=PLQ530p80agO_IMi_hVpMvJFvun8NUuTyC
+2. https://youtu.be/DcppAQ9ENvA
 
-
-
-## Communication At Local
+Extra:
+1. https://youtu.be/bigdrPB_2o8
+2. https://youtu.be/NOdXRAFEvDo
+3. https://youtu.be/qC2U_dZfGCo
