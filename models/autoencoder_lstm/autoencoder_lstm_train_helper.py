@@ -16,6 +16,7 @@ sns.set(color_codes=True)
 from scipy.stats import entropy
 
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 
 import tensorflow as tf
 tf.random.set_seed(10)
@@ -46,11 +47,14 @@ sys_path.insert(0, curr_dir)
 # # Helper Functions
 
 # %%
-def scale_timefeature_data(X_train, X_test):
+def scale_timefeature_data(X_train, X_test, saveScaler=False):
     # normalize the data
     scaler = StandardScaler()
     scaled_X_train = scaler.fit_transform(X_train)
     scaled_X_test = scaler.transform(X_test)
+    if saveScaler:
+        import joblib
+        joblib.dump(scaler, open('autoencoder_scaler', 'wb'))
     return scaled_X_train, scaled_X_test
 
 
@@ -101,7 +105,7 @@ def train_autoencoder_main(time_features_data:pd.DataFrame, cut_off_date_time:st
     test  = test.set_index('date_time')
 
     #Step 3 : Prepare Data : Normalize & Reshape
-    X_train, X_test = scale_timefeature_data(train, test)
+    X_train, X_test = scale_timefeature_data(train, test, True)
     X_train, X_test = prepare_lstm_input(X_train, X_test)
 
     #Step 4 : Build the model

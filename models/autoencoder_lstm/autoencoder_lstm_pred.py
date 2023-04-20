@@ -31,7 +31,7 @@ if __name__ == "__main__":
     #***************IMP: Update coding environment********************
     #####################################################################################
     code_env = CODE_ENV.WSL    
-    curr_dataset = DATASET_ID.Second
+    curr_dataset = DATASET_ID.Third
 
     comp_ver = ''
     if len(sys.argv) > 1:
@@ -98,10 +98,10 @@ if __name__ == "__main__":
     test_scored2, X_test_pred2, XTest2 = pred_test_autoencoder(restored_model, X_test, test, threshold)
     scored = pd.concat([test_scored1, test_scored2])
 
-    print(scored)
+    #print(scored)
 
     # plot bearing failure time plot
-    #import matplotlib.pyplot as plt
-    #scored.plot(logy=True,  figsize=(16,9), ylim=[1e-2,1e2], color=['blue','red'])
-    #plt.show()
+    import matplotlib.pyplot as plt
+    scored.plot(logy=True,  figsize=(16,9), ylim=[1e-2,1e2], color=['blue','red'])
+    plt.show()
 

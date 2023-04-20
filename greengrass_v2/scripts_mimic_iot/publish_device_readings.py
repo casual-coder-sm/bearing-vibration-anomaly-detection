@@ -154,4 +154,3 @@ for file_index, filename in enumerate(file_names_list[select_data_set][::select_
         future_response2 = operation1.get_response()
         future_response2.result(TIMEOUT)
         
-
