@@ -20,7 +20,7 @@ sys_path.insert(0, curr_dir)
 
 import model_feedinput_pipeline
 from model_feedinput_pipeline import CODE_ENV, DATASET_ID
-from autoencoder_lstm.autoencoder_lstm_train_helper import scale_timefeature_data, prepare_lstm_input, pred_test_autoencoder
+from models.autoencoder_lstm.autoencoder_lstm_main import scale_timefeature_data, prepare_lstm_input, pred_test_autoencoder
 
 
 # %%
@@ -32,21 +32,6 @@ if __name__ == "__main__":
     #####################################################################################
     code_env = CODE_ENV.WSL    
     curr_dataset = DATASET_ID.Third
-
-    comp_ver = ''
-    if len(sys.argv) > 1:
-        comp_ver = sys.argv[1]
-        
-        sys_code_env = int(sys.argv[2])
-        code_env = CODE_ENV(sys_code_env)
-
-        sys_dataset_id = int(sys.argv[3])
-        curr_dataset = DATASET_ID(sys_dataset_id)
-
-        print(comp_ver, code_env, curr_dataset)
-    else:
-        #For Win and EC2
-        pass
 
 
     #Step 1 : Setup Data Source
