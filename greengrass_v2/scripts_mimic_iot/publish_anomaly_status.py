@@ -23,7 +23,7 @@ from  sys import path as sys_path
 sys_path.insert(0, '/root/models')
 sys_path.insert(1, '/root/scripts_mimic_iot')
 
-from  model_feedinput_pipeline import get_dataset_paths 
+from model_feedinput_pipeline import get_dataset_paths 
 from model_feedinput_pipeline import CODE_ENV, DATASET_ID
 from autoencoder_lstm.autoencoder_lstm_generate_features import get_time_feature
 
@@ -71,11 +71,15 @@ select_input_stepsize = 200
 if len(sys.argv) > 1:
     comp_ver = sys.argv[1]
     
-    sys_code_env = int(sys.argv[2])
-    code_env = CODE_ENV(sys_code_env)
+    sys_code_env = sys.argv[2]
+    print("'",sys_code_env,"'")
+    str_to_codeenv_map={"EC2":CODE_ENV.EC2,"DEV":CODE_ENV.DEV,"WSL":CODE_ENV.WSL}
+    code_env = str_to_codeenv_map[sys_code_env]
 
-    sys_dataset_id = int(sys.argv[3])
-    curr_dataset = DATASET_ID(sys_dataset_id)
+    sys_dataset_id = sys.argv[3]
+    print("'",sys_dataset_id,"'")
+    str_to_dataset_map={"1":DATASET_ID.First, "2":DATASET_ID.Second, "3":DATASET_ID.Third}
+    curr_dataset = str_to_dataset_map[sys_dataset_id]
 
     sys_dataset_stepsize = int(sys.argv[4])
     select_input_stepsize = sys_dataset_stepsize
@@ -112,7 +116,7 @@ if flag_enable_mqtt:
         print('#'*80)
         print('Begin')
         ipc_client = awsiot.greengrasscoreipc.connect()
-        topic = "bvad/anomaly_status"
+        topic = "$aws/rules/bvad_status_telemetry"
         message = "Reading Value = "
         clientType = "Mimic Bearing Anomaly Sensor"
         qos = QOS.AT_LEAST_ONCE

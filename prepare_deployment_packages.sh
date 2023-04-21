@@ -1,7 +1,11 @@
+#!/bin/bash
+
 rm -r models/__pycache__ models/autoencoder_lstm/__pycache__
+rm models.zip
 zip -r models.zip models
 sha256sum models.zip
 chdir greengrass_v2
+rm ../scripts_mimic_iot.zip
 zip -r ../scripts_mimic_iot.zip scripts_mimic_iot
 chdir ..
 sha256sum scripts_mimic_iot.zip

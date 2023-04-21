@@ -9,13 +9,11 @@ docker pull
 ---------------------------------------------------------------------------------------------------------------------------------
 2. Run Containers - container specific
 
-docker run --name Mimic-BearingAnomalySensor_1 -e "select_bearing=1" -it casualcodersm/iot_device_simulator
+docker run --name Mimic-BearingAnomalySensor_1 -it casualcodersm/iot_device_simulator
 
-docker run --name Mimic-BearingAnomalySensor_2 -e "select_bearing=2" -it casualcodersm/iot_device_simulator
+docker run --name Mimic-BearingAnomalySensor_2 -it casualcodersm/iot_device_simulator
 
-docker run --name Mimic-BearingAnomalySensor_3 -e "select_bearing=3" -it casualcodersm/iot_device_simulator
-
-docker run --name Mimic-BearingAnomalySensor_4 -e "select_bearing=4" -it casualcodersm/iot_device_simulator
+docker run --name Mimic-BearingAnomalySensor_3 -it casualcodersm/iot_device_simulator
 
 ---------------------------------------------------------------------------------------------------------------------------------
 3. Setup environment within container - common (Run in each container)
@@ -40,8 +38,6 @@ sudo -E java -Droot="/greengrass/v2" -Dlog.store=FILE -jar ./GreengrassInstaller
 sudo -E java -Droot="/greengrass/v2" -Dlog.store=FILE -jar ./GreengrassInstaller/lib/Greengrass.jar --aws-region ap-south-1 --thing-name Mimic-BearingAnomalySensor_2 --thing-group-name Mimic-BearingVibrationSensorsGroup --component-default-user ggc_user:ggc_group --provision true --setup-system-service true --deploy-dev-tools true
 
 sudo -E java -Droot="/greengrass/v2" -Dlog.store=FILE -jar ./GreengrassInstaller/lib/Greengrass.jar --aws-region ap-south-1 --thing-name Mimic-BearingAnomalySensor_3 --thing-group-name Mimic-BearingVibrationSensorsGroup --component-default-user ggc_user:ggc_group --provision true --setup-system-service true --deploy-dev-tools true
-
- sudo -E java -Droot="/greengrass/v2" -Dlog.store=FILE -jar ./GreengrassInstaller/lib/Greengrass.jar --aws-region ap-south-1 --thing-name Mimic-BearingAnomalySensor_4 --thing-group-name Mimic-BearingVibrationSensorsGroup --component-default-user ggc_user:ggc_group --provision true --setup-system-service true --deploy-dev-tools true
 
 ---------------------------------------------------------------------------------------------------------------------------------
 5. Continue Setup environment within container - common (Run in each container)
@@ -89,3 +85,12 @@ https://docs.aws.amazon.com/greengrass/v2/developerguide/getting-started.html
 
 ## get Local Debug Console password
 /greengrass/v2/bin/greengrass-cli get-debug-password
+Change from default Configurration 
+<code>
+{
+  "port": "10441",
+  "httpsEnabled": "false",
+  "websocketPort": "10442",
+  "bindHostname": "0.0.0.0"
+}
+</code>
