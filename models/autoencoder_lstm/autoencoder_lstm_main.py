@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set(color_codes=True)
 
+import tensorflow as tf
 
 # %%
 import sys
@@ -50,8 +51,8 @@ def train_autoencoder_wrapper(time_features_data:pd.DataFrame, cut_off_date_time
 
 
 # %%
-from autoencoder_lstm import Bvad_AutoEncoder
-from autoencoder_lstm import ScalerWrapper
+from autoencoder_lstm.Bvad_AutoEncoder import Bvad_AutoEncoder
+from autoencoder_lstm.ScalerWrapper import ScalerWrapper
 from model_feedinput_pipeline import CODE_ENV, DATASET_ID
 from autoencoder_lstm.autoencoder_lstm_generate_features import get_time_features
 
@@ -151,40 +152,155 @@ def get_dataset_paths(code_env:CODE_ENV)->dict:
 
 
 # %%
-if __name__ == "__main__":
-    #####################################################################################
-    #***************IMP: Update coding environment********************
-    #####################################################################################
-    code_env = CODE_ENV.WSL
 
-    #Step 1 : Setup Data Source
-    dataset_paths = get_dataset_paths(code_env)   
+#####################################################################################
+#***************IMP: Update coding environment********************
+#####################################################################################
+code_env = CODE_ENV.WSL
 
-    #Step 2 : Generate the timefeatures
-    select_columns = [
-        ['b1_ch1', 'b2_ch3', 'b3_ch5', 'b4_ch7']
-      , ['b1_ch2', 'b2_ch4', 'b3_ch6', 'b4_ch8']
-      , ['b1_ch1', 'b2_ch2', 'b3_ch3', 'b4_ch4']
-      , ['b1_ch1', 'b2_ch2', 'b3_ch3', 'b4_ch4']
-    ]
-    time_feature_data_filename = ['timefeatures_1st_1.csv'
-                                  , 'timefeatures_1st_2.csv'
-                                  , 'timefeatures_2nd.csv'
-                                  , 'timefeatures_3rd.csv']
+#Test Stage 1 : Setup Data Source
+dataset_paths = get_dataset_paths(code_env)   
 
-    time_feature_data = []
+
+# %%
+#Test Stage 2 : Generate the timefeatures
+select_columns = [
+    ['b1_ch1', 'b2_ch3', 'b3_ch5', 'b4_ch7']
+    , ['b1_ch2', 'b2_ch4', 'b3_ch6', 'b4_ch8']
+    , ['b1_ch1', 'b2_ch2', 'b3_ch3', 'b4_ch4']
+    , ['b1_ch1', 'b2_ch2', 'b3_ch3', 'b4_ch4']
+]
+time_feature_data_filename = ['timefeatures_1st_1.csv'
+                                , 'timefeatures_1st_2.csv'
+                                , 'timefeatures_2nd.csv'
+                                , 'timefeatures_3rd.csv']
+dataset_id_mapping=[
+    DATASET_ID.First,
+    DATASET_ID.First,
+    DATASET_ID.Second,
+    DATASET_ID.Third
+]
+cut_off_date_time =[
+    '2003-11-20 23:54:03',
+    '2003-11-20 23:54:03',
+    '2004-02-15 12:52:39',
+    '2004-04-08 23:51:57'
+]
+scaler_filenames=[
+    "scaler_1st_1",
+    "scaler_1st_2",
+    "scaler_2nd",
+    "scaler_3rd"
+]
+
+
+# %%
+time_feature_data = []
+scalers_data = []
+
+flag_generate_features=False
+if flag_generate_features:
     for i in range(len(select_columns)):
-        time_feature_data.append(time_feature_data.append(get_time_features(code_env, dataset_paths, DATASET_ID(i), select_columns[i])))
-
-    for i in range(len(select_columns)):
+        time_feature_data.append(get_time_features(code_env, dataset_paths, dataset_id_mapping[i], select_columns[i]))
         time_feature_data[i].to_csv(time_feature_data_filename[i])
 
-    tf_file_indx = 0
-    cut_off_date_time =[
-        '2003-11-20 23:54:03',
-        '2003-11-20 23:54:03',
-        '2004-02-15 12:52:39',
-        '2004-04-08 23:51:57'
-    ]
-
+#Test Stage 3 : Normalize
+flag_normalize_features=False
+if flag_normalize_features:
+    for tf_file_indx in range(len(scaler_filenames)):
+        df_features = pd.read_csv(time_feature_data_filename[tf_file_indx])
+        train = df_features[df_features['filename']<=cut_off_date_time[tf_file_indx]]
+        test  = df_features[df_features['filename']>cut_off_date_time[tf_file_indx]]
+        train = train.set_index('filename')
+        test  = test.set_index('filename')
         
+        scaler = ScalerWrapper()
+        scaler.fit_transform(train)
+        scaler.transform(test)
+        scaler.save_scaler(scaler_filenames[tf_file_indx])
+
+
+# %%
+#Test Stage 4 : Train a model based on selected Dataset and validate Dataset
+flag_train_features=True
+if flag_train_features:
+    tf_file_indx=1
+    for tf_file_indx in range(len(cut_off_date_time)):
+        df_features = pd.read_csv(time_feature_data_filename[tf_file_indx])
+
+        train = df_features[df_features['filename']<=cut_off_date_time[tf_file_indx]]
+        test  = df_features[df_features['filename']>cut_off_date_time[tf_file_indx]]
+        train = train.set_index('filename')
+        test  = test.set_index('filename')
+        
+        scaler = ScalerWrapper()
+        scaler.load_scaler(scaler_filenames[tf_file_indx])
+        X_scaled_train, X_scaled_test = scaler.transform(X_train=train, X_test=test)
+
+        print(X_scaled_train.shape, X_scaled_test.shape)
+        auto_encoder = Bvad_AutoEncoder(train=train, test=test, scaler=scaler)
+        auto_encoder.prepare_lstm_input()
+        model, history = auto_encoder.train_autoencoder_model()
+
+        auto_encoder.pred_autoencoder()
+        
+        #save the model
+        model.save('../bvad_ae_lstm_'+str(tf_file_indx))
+
+        history, X_train_pred, threshold, train_scored = auto_encoder.get_training_result()
+        # plot the training losses
+        fig, ax = plt.subplots(figsize=(14, 6), dpi=80)
+        ax.plot(history['loss'], 'b', label='Train', linewidth=2)
+        ax.plot(history['val_loss'], 'r', label='Validation', linewidth=2)
+        ax.set_title('Model loss', fontsize=16)
+        ax.set_ylabel('Loss (mae)')
+        ax.set_xlabel('Epoch')
+        ax.legend(loc='upper right')
+        plt.savefig('Training_Loss_Distribution_'+str(tf_file_indx)+'.png')
+
+        for pred_set_indx in range(len(cut_off_date_time)):
+            df_features = pd.read_csv(time_feature_data_filename[pred_set_indx])
+            df_features = df_features.set_index('filename')
+
+            restored_model = tf.keras.models.load_model('../bvad_ae_lstm_'+str(tf_file_indx))
+
+            scaler = ScalerWrapper()
+            scaler.load_scaler(scaler_filenames[pred_set_indx])
+            _, X_scaled_test = scaler.transform(df_features)
+
+            auto_encoder = Bvad_AutoEncoder(test=df_features, scaler=scaler, model=restored_model)
+            auto_encoder.pred_autoencoder(threshold=threshold)
+
+
+            X_test_pred, _, test_scored = auto_encoder.get_test_result()
+
+            # plot bearing failure time plot
+            test_scored.plot(logy=True,  figsize=(8,4), ylim=[1e-2,1e2], color=['blue','red'])
+            plt.savefig('Prediction_Loss_Distribution_'+str(tf_file_indx)+'_'+str(pred_set_indx)+'.png')
+
+
+# %%
+#Test Stage 5 :  Predict based on previously trained model and scaler fittened on non-anomaly dataset
+flag_test_features=False
+if flag_test_features:
+    tf_file_indx=2
+    df_features = pd.read_csv(time_feature_data_filename[tf_file_indx])
+    df_features = df_features.set_index('filename')
+
+    restored_model = tf.keras.models.load_model('../bvad_ae_lstm')
+
+    scaler = ScalerWrapper()
+    scaler.load_scaler(scaler_filenames[tf_file_indx])
+    _, X_scaled_test = scaler.transform(df_features)
+
+    auto_encoder = Bvad_AutoEncoder(test=df_features, scaler=scaler, model=restored_model)
+    auto_encoder.pred_autoencoder(threshold=4)
+
+
+    X_test_pred, _, test_scored = auto_encoder.get_test_result()
+
+    # plot bearing failure time plot
+    test_scored.plot(logy=True,  figsize=(8,4), ylim=[1e-2,1e2], color=['blue','red'])
+    plt.savefig()
+
+    

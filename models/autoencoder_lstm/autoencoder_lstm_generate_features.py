@@ -67,44 +67,52 @@ def calculate_clearence(df):
         result.append(r)
     return np.array(result)
 
-def get_time_feature(code_env: CODE_ENV, dataset_details, id:DATASET_ID, fileindex:int, select_columns:list):
+def get_time_feature(code_env: CODE_ENV, dataset_details, id:DATASET_ID, fileindex:int, select_columns:list, feature_columns:list):
     filepath = dataset_details[id]['paths'][fileindex]
     
     #step1: get raw_data and associated filename
     raw_data = model_feedinput_pipeline.get_df(dataset_details, id, fileindex, code_env)
     raw_data = raw_data[select_columns]
+    mapping = {
+        raw_data.columns[0]:feature_columns[0]
+        , raw_data.columns[1]:feature_columns[1]
+        , raw_data.columns[2]:feature_columns[2]
+        , raw_data.columns[3]:feature_columns[3]
+    }
+    raw_data = raw_data.rename(columns=mapping)
+    
     if code_env == CODE_ENV.EC2:
         filename = Path(filepath.key).name
     elif code_env == CODE_ENV.WSL or code_env == CODE_ENV.DEV:
         filename =  Path(filepath).name
     
     #step2 : Generate features
-    mean_abs = raw_data.abs().mean().to_numpy().reshape(1,len(select_columns))
-    std = raw_data.std().to_numpy().reshape(1,len(select_columns))
-    skew = raw_data.skew().to_numpy().reshape(1,len(select_columns))
-    kurtosis = raw_data.kurtosis().to_numpy().reshape(1,len(select_columns))
-    entropy = calculate_entropy(raw_data).reshape(1,len(select_columns))
-    rms = calculate_rms(raw_data).reshape(1,len(select_columns))
-    max_abs=raw_data.abs().max().to_numpy().reshape(1,len(select_columns))
-    p2p = calculate_p2p(raw_data).reshape(1,len(select_columns))
+    mean_abs = raw_data.abs().mean().to_numpy().reshape(1,len(feature_columns))
+    std = raw_data.std().to_numpy().reshape(1,len(feature_columns))
+    skew = raw_data.skew().to_numpy().reshape(1,len(feature_columns))
+    kurtosis = raw_data.kurtosis().to_numpy().reshape(1,len(feature_columns))
+    entropy = calculate_entropy(raw_data).reshape(1,len(feature_columns))
+    rms = calculate_rms(raw_data).reshape(1,len(feature_columns))
+    max_abs=raw_data.abs().max().to_numpy().reshape(1,len(feature_columns))
+    p2p = calculate_p2p(raw_data).reshape(1,len(feature_columns))
     crest = (max_abs/rms)
-    clearence = calculate_clearence(raw_data).reshape(1,len(select_columns))
+    clearence = calculate_clearence(raw_data).reshape(1,len(feature_columns))
     shape = (rms/mean_abs)
     impulse = (max_abs/mean_abs)
 
     #step3 : save to dataframe
-    df_mean_abs = pd.DataFrame(mean_abs, columns=[c+'_mean' for c in select_columns])
-    df_std = pd.DataFrame(std, columns=[c+'_std'  for c in select_columns])
-    df_skew = pd.DataFrame(skew, columns=[c+'_skew' for c in select_columns])
-    df_kurtosis = pd.DataFrame(kurtosis, columns=[c+'_kurtosis' for c in select_columns])
-    df_entropy = pd.DataFrame(entropy, columns=[c+'_entropy' for c in select_columns])
-    df_rms = pd.DataFrame(rms, columns=[c+'_rms' for c in select_columns])        
-    df_max = pd.DataFrame(max_abs, columns=[c+'_max' for c in select_columns])
-    df_p2p = pd.DataFrame(p2p, columns=[c+'_p2p' for c in select_columns])
-    df_crest = pd.DataFrame(crest, columns=[c+'_crest' for c in select_columns])
-    df_clearence = pd.DataFrame(clearence, columns=[c+'_clearence' for c in select_columns])
-    df_shape = pd.DataFrame(shape, columns=[c+'_shape' for c in select_columns])
-    df_impulse = pd.DataFrame(impulse, columns=[c+'_impulse' for c in select_columns])
+    df_mean_abs = pd.DataFrame(mean_abs, columns=[c+'_mean' for c in feature_columns])
+    df_std = pd.DataFrame(std, columns=[c+'_std'  for c in feature_columns])
+    df_skew = pd.DataFrame(skew, columns=[c+'_skew' for c in feature_columns])
+    df_kurtosis = pd.DataFrame(kurtosis, columns=[c+'_kurtosis' for c in feature_columns])
+    df_entropy = pd.DataFrame(entropy, columns=[c+'_entropy' for c in feature_columns])
+    df_rms = pd.DataFrame(rms, columns=[c+'_rms' for c in feature_columns])        
+    df_max = pd.DataFrame(max_abs, columns=[c+'_max' for c in feature_columns])
+    df_p2p = pd.DataFrame(p2p, columns=[c+'_p2p' for c in feature_columns])
+    df_crest = pd.DataFrame(crest, columns=[c+'_crest' for c in feature_columns])
+    df_clearence = pd.DataFrame(clearence, columns=[c+'_clearence' for c in feature_columns])
+    df_shape = pd.DataFrame(shape, columns=[c+'_shape' for c in feature_columns])
+    df_impulse = pd.DataFrame(impulse, columns=[c+'_impulse' for c in feature_columns])
     df_filename = pd.DataFrame([filename], columns=['filename'])
     df = pd.concat([df_filename, df_mean_abs, df_std, df_skew, df_kurtosis
                         ,df_entropy, df_rms, df_max, df_p2p, df_crest
@@ -114,20 +122,27 @@ def get_time_feature(code_env: CODE_ENV, dataset_details, id:DATASET_ID, fileind
 
 
 def get_time_features(code_env: CODE_ENV, dataset_details, id:DATASET_ID, select_columns:list):
-    #time_features = ['mean','std','skew','kurtosis','entropy','rms','max','p2p', 'crest', 'clearence', 'shape', 'impulse']
-    
     data = pd.DataFrame()   
     for fileindex, filepath in enumerate(dataset_details[id]['paths']):
         #get time feature
-        df = get_time_feature(code_env, dataset_details, id, fileindex, select_columns)
+        feature_columns=['B1', 'B2', 'B3', 'B4']
+        df = get_time_feature(code_env, dataset_details, id, fileindex, select_columns, feature_columns)
         #concat with previous set
         data = pd.concat([data, df], axis=0)
+        
         #interactive reporting of progress
         if fileindex % 10 == 0:
             print('Processed ', fileindex, ' out of ', len(dataset_details[id]['paths']) )
-
+    
     data['filename'] = pd.to_datetime(data['filename'], format='%Y.%m.%d.%H.%M.%S')
     data = data.set_index('filename')
+
+    time_features = ['mean','std','skew','kurtosis','entropy','rms','max','p2p', 'crest', 'clearence', 'shape', 'impulse']
+    feature_columns=['B1', 'B2', 'B3', 'B4']
+    
+    columns = [c+'_'+tf for c in feature_columns for tf in time_features]
+    data = data[columns]
+     
     return data
 
 
