@@ -83,7 +83,7 @@ class Bvad_AutoEncoder:
 
         #Train
         self.history = self.model.fit(self.X_lstm_train, self.X_lstm_train, batch_size=batch_size, epochs=nb_epochs
-                                 ,verbose=1, validation_data=X_valid, validation_split=0.5)
+                                 ,verbose=1, validation_data=(X_valid, X_valid), validation_split=0.5)
         return self.model, self.history.history
     
 

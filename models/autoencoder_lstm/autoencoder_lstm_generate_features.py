@@ -1,26 +1,7 @@
-# %%
 import os
-from sys import path as sys_path
-from pathlib import Path
-
-import pandas as pd
-import numpy as np
-from numpy.random import seed
-
-import matplotlib.pyplot as plt
-#%matplotlib inline
-
-import seaborn as sns
-sns.set(color_codes=True)
-
-from scipy.stats import entropy
-
-
-# %%
-
 import sys
 from sys import path as sys_path
-
+# Code to re-configure current working directory (for ipynb environment)
 curr_dir = os.getcwd()
 #check in the order sub-directory to main-directory
 if 'autoencoder_lstm' in  curr_dir:
@@ -32,11 +13,23 @@ elif 'bearing-vibration-anomaly-detection' in curr_dir:
 curr_dir = os.getcwd()
 sys_path.insert(0, curr_dir)
 
+from pathlib import Path
+
+import pandas as pd
+import numpy as np
+from numpy.random import seed
+
+import matplotlib.pyplot as plt
+#%matplotlib inline
+import seaborn as sns
+sns.set(color_codes=True)
+
+from scipy.stats import entropy
+
 import model_feedinput_pipeline
 from model_feedinput_pipeline import CODE_ENV, DATASET_ID
 
 
-# %%
 # Root Mean Squared Sum
 def calculate_rms(df):
     result = []
@@ -146,8 +139,6 @@ def get_time_features(code_env: CODE_ENV, dataset_details, id:DATASET_ID, select
     return data
 
 
-
-# %%
 if __name__ == "__main__":
 
     #####################################################################################
