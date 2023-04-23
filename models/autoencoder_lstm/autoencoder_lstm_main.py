@@ -91,8 +91,8 @@ def main_generate_scalers():
 
 
 #Test Stage 4 : Train a model based on selected Dataset and validate Dataset
-def main_generate_autoencoder_lstm_models(isWithValidation:bool=True, save_plots:bool=False):
-    results = {}
+def main_generate_autoencoder_lstm_models(isWithValidation:bool=True, save_restuts=False, save_plots:bool=False):
+    training_results = {}
     for tf_file_indx in range(0, len(cut_off_date_time)):
         validset_file_indx=(tf_file_indx+2)%4
         print('Validation Set Index=',validset_file_indx)
@@ -131,20 +131,19 @@ def main_generate_autoencoder_lstm_models(isWithValidation:bool=True, save_plots
         model.save('bvad_ae_lstm_'+str(tf_file_indx))
 
         history, X_train_pred, threshold, train_scored = auto_encoder.get_training_result()
-        results[tf_file_indx]={
+        training_results[tf_file_indx]={
             'model':model
             , 'history':history
             , 'train_pred': X_train_pred
             , 'threshold': threshold
             , 'score':train_scored
         }
-        
-        with open('training_results_'+str(tf_file_indx)+'.txt', 'w') as training:
-            training.write(str(history))
-            training.write(str(threshold))
-            training.write(str(train_scored))
-        X_train_pred.to_csv('train_pred_output'+str(tf_file_indx)+'.csv')
-
+        if save_restuts:
+            with open('training_results_'+str(tf_file_indx)+'.txt', 'w') as training:
+                training.write(str(history))
+                training.write(str(threshold))
+                training.write(str(train_scored))
+            X_train_pred.to_csv('train_pred_output'+str(tf_file_indx)+'.csv')
 
         # plot the training losses
         if save_plots:
@@ -156,63 +155,46 @@ def main_generate_autoencoder_lstm_models(isWithValidation:bool=True, save_plots
             ax.set_xlabel('Epoch')
             ax.legend(loc='upper right')
             plt.savefig('Training_Loss_Distribution_'+str(tf_file_indx)+'.png')
-
-        for pred_set_indx in range(len(cut_off_date_time)):
-            df_features = pd.read_csv(time_feature_data_filename[pred_set_indx])
-            df_features = df_features.set_index('filename')
-
-            restored_model = tf.keras.models.load_model('../bvad_ae_lstm_'+str(tf_file_indx))
-
-            scaler = ScalerWrapper()
-            scaler.load_scaler(scaler_filenames[pred_set_indx])
-            _, X_scaled_test = scaler.transform(df_features)
-
-            auto_encoder = Bvad_AutoEncoder(test=df_features, scaler=scaler, model=restored_model)
-            auto_encoder.pred_autoencoder(threshold=threshold)
-
-            X_test_pred, _, test_scored = auto_encoder.get_test_result()
-
-            # plot bearing failure time plot
-            if save_plots:
-                test_scored.plot(logy=True,  figsize=(8,4), ylim=[1e-2,1e2], color=['blue','red'])
-                plt.savefig('Prediction_Loss_Distribution_'+str(tf_file_indx)+'_'+str(pred_set_indx)+'.png')
         
-    return
+    return training_results
 
 
 #Test Stage 5 :  Predict based on previously trained model and scaler fittened on non-anomaly dataset
-def main_predict_autoencoder_lstm_models(draw_plots:bool=False):
+def main_predict_autoencoder_lstm_models(tf_file_indx:int, save_plots:bool=False):
     recorded_thresholds = [
         2.725298151678263
         , 2.677191266177443
         , 1.1472609170475838
         , 2.2959081453652157
     ]
-    results = {}    
-    for tf_file_indx in range(len(recorded_thresholds)):
-        df_features = pd.read_csv(time_feature_data_filename[tf_file_indx])
+
+    restored_model = tf.keras.models.load_model('bvad_ae_lstm_'+str(tf_file_indx))
+
+    predict_results = {}
+    for pred_set_indx in range(len(cut_off_date_time)):
+        df_features = pd.read_csv(time_feature_data_filename[pred_set_indx])
         df_features = df_features.set_index('filename')
 
         scaler = ScalerWrapper()
-        scaler.load_scaler(scaler_filenames[tf_file_indx])
+        scaler.load_scaler(scaler_filenames[pred_set_indx])
         _, X_scaled_test = scaler.transform(df_features)
 
-        restored_model = tf.keras.models.load_model('bvad_ae_lstm_'+str(tf_file_indx))
         auto_encoder = Bvad_AutoEncoder(test=df_features, scaler=scaler, model=restored_model)
         auto_encoder.pred_autoencoder(threshold=recorded_thresholds[tf_file_indx])
 
-        X_test_pred, _, test_scored = auto_encoder.get_test_result()
-        results[tf_file_indx]={
+        X_test_pred, pred_threshold, test_scored = auto_encoder.get_test_result()
+        predict_results[pred_set_indx]={
             'test_pred':X_test_pred
-            , 'threshold':recorded_thresholds[tf_file_indx]
+            , 'threshold':pred_threshold
             , 'score':test_scored
         }
 
         # plot bearing failure time plot
-        if draw_plots:
+        if save_plots:
             test_scored.plot(logy=True,  figsize=(8,4), ylim=[1e-2,1e2], color=['blue','red'])
+            plt.savefig('Prediction_Loss_Distribution_'+str(tf_file_indx)+'_'+str(pred_set_indx)+'.png')
 
-    return results
+    return predict_results
         
 
 if __name__ == "__main__":
@@ -225,5 +207,5 @@ if __name__ == "__main__":
     #dataset_paths = get_dataset_paths(code_env)
     #main_generate_timefeatures(code_env)
     #main_generate_scalers()
-    #main_generate_autoencoder_lstm_models(True)
-    main_predict_autoencoder_lstm_models()
+    #main_generate_autoencoder_lstm_models(False, True, True)
+    main_predict_autoencoder_lstm_models(tf_file_indx=2, save_plots=False)

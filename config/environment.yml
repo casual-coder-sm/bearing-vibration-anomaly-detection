@@ -1,0 +1,12 @@
+name: cds
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - tensorflow
+  - numpy
+  - pandas
+  - matplotlib
+  - seaborn
+  - scipy
+  - scikit-learn
