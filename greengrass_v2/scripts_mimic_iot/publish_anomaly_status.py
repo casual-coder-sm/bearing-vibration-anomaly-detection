@@ -28,7 +28,7 @@ from model_feedinput_pipeline import get_dataset_paths
 from autoencoder_lstm.Bvad_AutoEncoder import Bvad_AutoEncoder
 from autoencoder_lstm.ScalerWrapper import ScalerWrapper
 from model_feedinput_pipeline import CODE_ENV, DATASET_ID
-from autoencoder_lstm.autoencoder_lstm_generate_features import get_time_features
+from autoencoder_lstm.autoencoder_lstm_generate_features import get_time_feature
 import autoencoder_lstm.autoencoder_lstm_main as ae_lstm
 
 #######################################################################
@@ -36,13 +36,14 @@ import autoencoder_lstm.autoencoder_lstm_main as ae_lstm
 #######################################################################
 #Setup greengrasscore ipc
 TIMEOUT = 10
-flag_enable_mqtt=False
+flag_enable_mqtt=True
 
 #Setup Running environment
 comp_ver = "1.0.0"
-code_env = CODE_ENV.WSL
+code_env = CODE_ENV.DEV
 sys_dataset_id = 2
-select_input_stepsize = 200
+select_input_stepsize = 50
+select_output_stepsize = 5
 if len(sys.argv) > 1:
     comp_ver = sys.argv[1]
     
@@ -57,7 +58,13 @@ if len(sys.argv) > 1:
     sys_dataset_stepsize = int(sys.argv[4])
     select_input_stepsize = sys_dataset_stepsize
 
-    print(comp_ver, code_env, curr_dataset, select_input_stepsize)
+    sys_preict_stepsize = int(sys.argv[5])
+    select_output_stepsize = sys_preict_stepsize
+
+    print(comp_ver, code_env, curr_dataset, select_input_stepsize, select_output_stepsize)
+
+trained_model_dataset=int(os.environ['trained_model_dataset'])
+device_name=os.environ['device_name']
 
 #Setup Data Source
 recorded_thresholds = [
@@ -67,54 +74,73 @@ recorded_thresholds = [
         , 2.2959081453652157
 ]
 
-#Model is pre-fixed to 2nd Dataset
-training_set = 0
-restored_model = tf.keras.models.load_model('bvad_ae_lstm_'+str(training_set))
+#Step 1: Set the datasource paths
+dataset_paths = get_dataset_paths(code_env)
 
-df_features = pd.read_csv(ae_lstm.time_feature_data_filename[curr_dataset])
-df_features = df_features.set_index('filename')
-
+#Step 2: Load the Reference fitted scaler
 scaler = ScalerWrapper()
 scaler.load_scaler(ae_lstm.scaler_filenames[curr_dataset])
-_, X_scaled_test = scaler.transform(df_features)
 
-auto_encoder = Bvad_AutoEncoder(test=df_features, scaler=scaler, model=restored_model)
-auto_encoder.pred_autoencoder(threshold=recorded_thresholds[training_set])
+#Step 3: Load the Reference trained Model
+restored_model = tf.keras.models.load_model('bvad_ae_lstm_'+str(trained_model_dataset))
 
-X_test_pred, pred_threshold, test_scored = auto_encoder.get_test_result()
-predict_results={
-    'test_pred':X_test_pred
-    , 'threshold':pred_threshold
-    , 'score':test_scored
-}
+#Step 4: Configure settings
+predict_model_columns = ae_lstm.select_columns[curr_dataset]
+predict_model_ims_dataset = ae_lstm.dataset_id_mapping[curr_dataset]
 
-if flag_enable_mqtt:
-    print('#'*80)
-    print('Begin')
-    ipc_client = awsiot.greengrasscoreipc.connect()
-    topic = "$aws/rules/bvad_status_telemetry"
-    message = "Reading Value = "
-    clientType = "Mimic Bearing Anomaly Sensor"
-    qos = QOS.AT_LEAST_ONCE
-    print('-'*80)
+time_features = ['mean','std','skew','kurtosis','entropy','rms','max','p2p', 'crest', 'clearence', 'shape', 'impulse']
+feature_columns=['B1', 'B2', 'B3', 'B4']
+columns = [c+'_'+tf for c in feature_columns for tf in time_features]
 
-df_feature = pd.DataFrame() 
+#Step 5: For each second of data mimic generation of sensor vibration data and prection of anomaly status
+for record_indx in range(0, len(dataset_paths[predict_model_ims_dataset]['paths']), select_input_stepsize):
+    #Step 5.1 : Generate feature data
+    df_features = pd.DataFrame()
+    for i in range(record_indx, record_indx+select_output_stepsize):
+        data = get_time_feature(code_env, dataset_paths, predict_model_ims_dataset, i, predict_model_columns, feature_columns)
+        df_features=pd.concat([df_features, data], axis=0)
+    df_features['filename'] = pd.to_datetime(df_features['filename'], format='%Y.%m.%d.%H.%M.%S')
+    df_features = df_features.set_index('filename')
+    df_features = df_features[columns]
 
-#for fileindex in range(0,len(dataset_details[curr_dataset]['paths']),select_input_stepsize):
-for indx in range(0, len(df_features.index), select_input_stepsize):
-    transmit_data_dict={
-            'dataset'  : curr_dataset + 1,
-            'filename' : str(df_features.index[indx]),
-            'Loss_MAE' : predict_results['score']['Loss_mae'].iloc[indx],
-            'Threshold': predict_results['score']['Threshold'].iloc[indx],
-            'Anomaly'  : int(predict_results['score']['Anomaly'].iloc[indx])
+    #Step 5.2 : Normalize the features
+    _, X_scaled_test = scaler.transform(df_features)
+
+    #Step 5.3: Perform Prediction
+    auto_encoder = Bvad_AutoEncoder(test=df_features, scaler=scaler, model=restored_model)
+    auto_encoder.pred_autoencoder(threshold=recorded_thresholds[trained_model_dataset])
+    X_test_pred, pred_threshold, test_scored = auto_encoder.get_test_result()
+    predict_results={
+        'test_pred':X_test_pred
+        , 'threshold':pred_threshold
+        , 'score':test_scored
+    }
+
+    #Step 5.4: Mimic IoT device sending Device Status
+    if flag_enable_mqtt:
+        print('#'*80)
+        print('Begin')
+        ipc_client = awsiot.greengrasscoreipc.connect()
+        topic = "bvad/anomaly_status/"+device_name
+        message = "Reading Value = "
+        clientType = "Mimic Bearing Anomaly Sensor"
+        qos = QOS.AT_LEAST_ONCE
+        print('-'*80)
+
+    transmission_data = []
+    for i in range(select_output_stepsize):
+        transmit_data_dict={
+            'devicename': device_name,
+            'dataset'   : curr_dataset + 1,
+            'filename'  : str(df_features.index[i]),
+            'Loss_MAE'  : predict_results['score']['Loss_mae'].iloc[i],
+            'Threshold' : predict_results['score']['Threshold'].iloc[i],
+            'Anomaly'   : int(predict_results['score']['Anomaly'].iloc[i])
         }
-    #print(transmit_data_dict)
-        
+        transmission_data.append(transmit_data_dict)
+    transmission_data_json = json.dumps(transmission_data)
     #interactive reporting of progress
-    if indx % 100 == 0:
-        print(json.dumps(transmit_data_dict))
-        print('Processed ', indx, ' out of ', df_features.shape[0])
+    print('Processed ', record_indx, ' out of ', len(dataset_paths[predict_model_ims_dataset]['paths']))
 
     if flag_enable_mqtt:
         #######################################################################
@@ -122,7 +148,7 @@ for indx in range(0, len(df_features.index), select_input_stepsize):
         request = PublishToIoTCoreRequest()
         request.topic_name = topic
 
-        payload = json.dumps(transmit_data_dict)
+        payload = transmission_data_json
         request.payload = bytes(payload, "utf-8")
         request.qos = qos
 

@@ -58,7 +58,11 @@ RUN python -c "import tensorflow"
 #COPY test_run.py .
 #ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "cds", "python", "test_run.py"]
 
-ENV select_data_set=1
-ENV select_bearing=1
-ENV select_input_stepsize=3000
-
+############################################################
+# Device specific environment variables.
+# Default values set here for documentation. 
+# Actual values to be set while running container with -e param
+# 
+############################################################
+ENV device_name="Mimic-BearingVibrationSensor"
+ENV trained_model_dataset=1
