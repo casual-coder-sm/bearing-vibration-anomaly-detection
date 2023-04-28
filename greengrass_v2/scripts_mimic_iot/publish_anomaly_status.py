@@ -6,14 +6,13 @@ import os
 import sys
 from pathlib import Path
 import json
-import joblib
+import time
 
-import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 import awsiot.greengrasscoreipc
-import awsiot.greengrasscoreipc.client as client
+#import awsiot.greengrasscoreipc.client as client
 from awsiot.greengrasscoreipc.model import (
     QOS,
     PublishToIoTCoreRequest
@@ -42,8 +41,9 @@ flag_enable_mqtt=True
 comp_ver = "1.0.0"
 code_env = CODE_ENV.DEV
 sys_dataset_id = 2
-select_input_stepsize = 50
-select_output_stepsize = 5
+set_input_stepsize = 50
+set_output_stepsize = 5
+set_demo_loop_timer = 1
 if len(sys.argv) > 1:
     comp_ver = sys.argv[1]
     
@@ -56,12 +56,16 @@ if len(sys.argv) > 1:
     training_model_id = int(sys_model_id)
 
     sys_dataset_stepsize = int(sys.argv[4])
-    select_input_stepsize = sys_dataset_stepsize
+    set_input_stepsize = sys_dataset_stepsize
 
     sys_preict_stepsize = int(sys.argv[5])
-    select_output_stepsize = sys_preict_stepsize
+    set_output_stepsize = sys_preict_stepsize
 
-    print(comp_ver, code_env, training_model_id, select_input_stepsize, select_output_stepsize)
+    sys_demo_loop_timer = int(sys.argv[6])
+    set_demo_loop_timer = sys_demo_loop_timer
+
+
+    print(comp_ver, code_env, training_model_id, set_input_stepsize, set_output_stepsize, set_demo_loop_timer)
 
 predict_for_dataset=int(os.environ['predict_for_dataset'])
 device_name=os.environ['device_name']
@@ -93,10 +97,10 @@ feature_columns=['B1', 'B2', 'B3', 'B4']
 columns = [c+'_'+tf for c in feature_columns for tf in time_features]
 
 #Step 5: For each second of data mimic generation of sensor vibration data and prection of anomaly status
-for record_indx in range(0, len(dataset_paths[predict_model_ims_dataset]['paths']), select_input_stepsize):
+for record_indx in range(0, len(dataset_paths[predict_model_ims_dataset]['paths']), set_input_stepsize):
     #Step 5.1 : Generate feature data
     df_features = pd.DataFrame()
-    for i in range(record_indx, record_indx+select_output_stepsize):
+    for i in range(record_indx, record_indx+set_output_stepsize):
         data = get_time_feature(code_env, dataset_paths, predict_model_ims_dataset, i, predict_model_columns, feature_columns)
         df_features=pd.concat([df_features, data], axis=0)
     df_features['filename'] = pd.to_datetime(df_features['filename'], format='%Y.%m.%d.%H.%M.%S')
@@ -128,7 +132,7 @@ for record_indx in range(0, len(dataset_paths[predict_model_ims_dataset]['paths'
         print('-'*80)
 
     transmission_data = []
-    for i in range(select_output_stepsize):
+    for i in range(set_output_stepsize):
         transmit_data_dict={
             'devicename': device_name,
             'dataset'   : predict_for_dataset + 1,
@@ -159,3 +163,5 @@ for record_indx in range(0, len(dataset_paths[predict_model_ims_dataset]['paths'
         future_response.result(TIMEOUT)
         print('#'*80)
         #######################################################################
+    
+    time.sleep(set_demo_loop_timer)

@@ -1,16 +1,17 @@
 {
   "RecipeFormatVersion": "2020-01-25",
   "ComponentName": "bearing_vibration_anomaly_detection",
-  "ComponentVersion": "1.0.0",
+  "ComponentVersion": "1.0.2",
   "ComponentDescription": "Mimic IOT Device reading of bearing vibration to detect and report anomaly",
   "ComponentPublisher": "Shailesh Marathe",
   "ComponentConfiguration": {
     "DefaultConfiguration": {
-      "comp_ver": "1.0.0",
+      "comp_ver": "1.0.2",
       "deploy_env": "DEV",
       "load_dataset_model": "2",
       "dataset_step_size": "50",
       "predict_step_size": "5",
+      "demo_loop_timer":"5",
       "accessControl": {
           "aws.greengrass.ipc.mqttproxy": {
             "collect_device_data:mqttproxy:1": {
@@ -39,13 +40,13 @@
         },
         "Run": {
           "RequiresPrivilege":true,
-          "script":"sh -u {artifacts:path}/begin_mimic_devicesimulation.sh \"{configuration:/comp_ver}\" \"{configuration:/deploy_env}\" \"{configuration:/load_dataset_model}\" \"{configuration:/dataset_step_size}\" \"{configuration:/predict_step_size}\""
+          "script":"sh -u {artifacts:path}/begin_mimic_devicesimulation.sh \"{configuration:/comp_ver}\" \"{configuration:/deploy_env}\" \"{configuration:/load_dataset_model}\" \"{configuration:/dataset_step_size}\" \"{configuration:/predict_step_size}\" \"{configuration:/demo_loop_timer}\""
         }   
       },
       "Artifacts": [
         {
-          "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.0/models.zip",
-          "Digest": "5aca9726eb828bb968bce3a242fc8355f48bc3f1faa6f47e0b17c64f62567c8a",
+          "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.2/models.zip",
+          "Digest": "225fc90563c721bafb548d876e5bf9762406ca50dd8eb11713cec261dc6f14cc",
           "Algorithm": "SHA-256",
           "Unarchive": "NONE",
           "Permission": {
@@ -54,8 +55,8 @@
           }
         },
         {
-          "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.0/scripts_mimic_iot.zip",
-          "Digest": "0793a53ebf1feb81d2f59c6f1a5fa8efa4ab4d428caf65171e659a78b0c905b4",
+          "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.2/scripts_mimic_iot.zip",
+          "Digest": "7453d02a316512611c7505660a241cb79a3db98152cade587c65c574154d0c8d",
           "Algorithm": "SHA-256",
           "Unarchive": "NONE",
           "Permission": {
@@ -64,8 +65,8 @@
           }
         },
         {
-          "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.0/begin_mimic_devicesimulation.sh",
-          "Digest": "479f5e567b6172da4b03ea8a3981ed90363e35a9083bc07a0db459fbd00c0121",
+          "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.2/begin_mimic_devicesimulation.sh",
+          "Digest": "60b0f0f49a3a1cb7e52240cfe70a06bc8b999bd2c68444c56eecc19e221be1a8",
           "Algorithm": "SHA-256",
           "Unarchive": "NONE",
           "Permission": {
