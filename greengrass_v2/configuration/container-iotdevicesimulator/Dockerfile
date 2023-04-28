@@ -65,4 +65,4 @@ RUN python -c "import tensorflow"
 # 
 ############################################################
 ENV device_name="Mimic-BearingVibrationSensor"
-ENV trained_model_dataset=1
+ENV predict_for_dataset=1

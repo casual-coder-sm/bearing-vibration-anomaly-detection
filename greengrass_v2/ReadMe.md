@@ -4,18 +4,18 @@ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/amazon-linux-ami-mate.html
 # Steps for setting up IoT Device Simulator for Bearing Vibration Data
 1. Pull Docker image from registry
 
-docker pull 
+docker pull casualcodersm/iot_device_simulator
 
 ---------------------------------------------------------------------------------------------------------------------------------
 2. Run Containers - container specific
 
-docker run --rm -e device_name="BearingAnomalySensor1" -e trained_model_dataset=1 --name BearingAnomalySensor1 -it casualcodersm/iot_device_simulator
+docker run -e device_name="BearingAnomalySensor1" -e predict_for_dataset=0 --name BearingAnomalySensor1 -it casualcodersm/iot_device_simulator
 
-docker run --rm -e device_name="BearingAnomalySensor2" -e trained_model_dataset=2 --name BearingAnomalySensor2 -it casualcodersm/iot_device_simulator
+docker run -e device_name="BearingAnomalySensor2" -e predict_for_dataset=1 --name BearingAnomalySensor2 -it casualcodersm/iot_device_simulator
 
-docker run --rm -e device_name="BearingAnomalySensor3" -e trained_model_dataset=3 --name BearingAnomalySensor3 -it casualcodersm/iot_device_simulator
+docker run -e device_name="BearingAnomalySensor3" -e predict_for_dataset=2 --name BearingAnomalySensor3 -it casualcodersm/iot_device_simulator
 
-docker run --rm -e device_name="BearingAnomalySensor4" -e trained_model_dataset=4 --name BearingAnomalySensor4 -it casualcodersm/iot_device_simulator
+docker run -e device_name="BearingAnomalySensor4" -e predict_for_dataset=3 --name BearingAnomalySensor4 -it casualcodersm/iot_device_simulator
 
 ---------------------------------------------------------------------------------------------------------------------------------
 3. Setup environment within container - common (Run in each container)

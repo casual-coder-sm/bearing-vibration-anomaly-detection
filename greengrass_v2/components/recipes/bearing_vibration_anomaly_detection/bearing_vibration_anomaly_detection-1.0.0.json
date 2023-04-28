@@ -8,7 +8,7 @@
     "DefaultConfiguration": {
       "comp_ver": "1.0.0",
       "deploy_env": "DEV",
-      "dataset_id": "2",
+      "load_dataset_model": "2",
       "dataset_step_size": "50",
       "predict_step_size": "5",
       "accessControl": {
@@ -39,13 +39,13 @@
         },
         "Run": {
           "RequiresPrivilege":true,
-          "script":"sh -u {artifacts:path}/begin_mimic_devicesimulation.sh \"{configuration:/comp_ver}\" \"{configuration:/deploy_env}\" \"{configuration:/dataset_id}\" \"{configuration:/dataset_step_size}\" \"{configuration:/predict_step_size}\""
+          "script":"sh -u {artifacts:path}/begin_mimic_devicesimulation.sh \"{configuration:/comp_ver}\" \"{configuration:/deploy_env}\" \"{configuration:/load_dataset_model}\" \"{configuration:/dataset_step_size}\" \"{configuration:/predict_step_size}\""
         }   
       },
       "Artifacts": [
         {
           "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.0/models.zip",
-          "Digest": "39cd8a598aff1898256059471b44f63811d4e0bf542b0bbbc335e326a0061a41",
+          "Digest": "5aca9726eb828bb968bce3a242fc8355f48bc3f1faa6f47e0b17c64f62567c8a",
           "Algorithm": "SHA-256",
           "Unarchive": "NONE",
           "Permission": {
@@ -55,7 +55,7 @@
         },
         {
           "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.0/scripts_mimic_iot.zip",
-          "Digest": "0490bd39c484c1defe45c6a674c8b7fde90436465b6d7c5808779f5585614c73",
+          "Digest": "0793a53ebf1feb81d2f59c6f1a5fa8efa4ab4d428caf65171e659a78b0c905b4",
           "Algorithm": "SHA-256",
           "Unarchive": "NONE",
           "Permission": {
@@ -65,7 +65,7 @@
         },
         {
           "Uri": "s3://anomaly-detection-from-bearing-vibration-project-bucket/greengrass_v2/components/artifacts/bearing-anomaly-vibration-detection/1.0.0/begin_mimic_devicesimulation.sh",
-          "Digest": "4f3fb110faa392a46755df4d705e813836e022ef439bb42e77ef4d080e0f5a72",
+          "Digest": "479f5e567b6172da4b03ea8a3981ed90363e35a9083bc07a0db459fbd00c0121",
           "Algorithm": "SHA-256",
           "Unarchive": "NONE",
           "Permission": {

@@ -52,8 +52,8 @@ if len(sys.argv) > 1:
     str_to_codeenv_map={"EC2":CODE_ENV.EC2,"DEV":CODE_ENV.DEV,"WSL":CODE_ENV.WSL}
     code_env = str_to_codeenv_map[sys_code_env]
 
-    sys_dataset_id = sys.argv[3]
-    curr_dataset = int(sys_dataset_id)
+    sys_model_id = sys.argv[3]
+    training_model_id = int(sys_model_id)
 
     sys_dataset_stepsize = int(sys.argv[4])
     select_input_stepsize = sys_dataset_stepsize
@@ -61,9 +61,9 @@ if len(sys.argv) > 1:
     sys_preict_stepsize = int(sys.argv[5])
     select_output_stepsize = sys_preict_stepsize
 
-    print(comp_ver, code_env, curr_dataset, select_input_stepsize, select_output_stepsize)
+    print(comp_ver, code_env, training_model_id, select_input_stepsize, select_output_stepsize)
 
-trained_model_dataset=int(os.environ['trained_model_dataset'])
+predict_for_dataset=int(os.environ['predict_for_dataset'])
 device_name=os.environ['device_name']
 
 #Setup Data Source
@@ -79,14 +79,14 @@ dataset_paths = get_dataset_paths(code_env)
 
 #Step 2: Load the Reference fitted scaler
 scaler = ScalerWrapper()
-scaler.load_scaler(ae_lstm.scaler_filenames[curr_dataset])
+scaler.load_scaler(ae_lstm.scaler_filenames[predict_for_dataset])
 
 #Step 3: Load the Reference trained Model
-restored_model = tf.keras.models.load_model('bvad_ae_lstm_'+str(trained_model_dataset))
+restored_model = tf.keras.models.load_model('bvad_ae_lstm_'+str(training_model_id))
 
 #Step 4: Configure settings
-predict_model_columns = ae_lstm.select_columns[curr_dataset]
-predict_model_ims_dataset = ae_lstm.dataset_id_mapping[curr_dataset]
+predict_model_columns = ae_lstm.select_columns[predict_for_dataset]
+predict_model_ims_dataset = ae_lstm.dataset_id_mapping[predict_for_dataset]
 
 time_features = ['mean','std','skew','kurtosis','entropy','rms','max','p2p', 'crest', 'clearence', 'shape', 'impulse']
 feature_columns=['B1', 'B2', 'B3', 'B4']
@@ -108,7 +108,7 @@ for record_indx in range(0, len(dataset_paths[predict_model_ims_dataset]['paths'
 
     #Step 5.3: Perform Prediction
     auto_encoder = Bvad_AutoEncoder(test=df_features, scaler=scaler, model=restored_model)
-    auto_encoder.pred_autoencoder(threshold=recorded_thresholds[trained_model_dataset])
+    auto_encoder.pred_autoencoder(threshold=recorded_thresholds[training_model_id])
     X_test_pred, pred_threshold, test_scored = auto_encoder.get_test_result()
     predict_results={
         'test_pred':X_test_pred
@@ -131,7 +131,7 @@ for record_indx in range(0, len(dataset_paths[predict_model_ims_dataset]['paths'
     for i in range(select_output_stepsize):
         transmit_data_dict={
             'devicename': device_name,
-            'dataset'   : curr_dataset + 1,
+            'dataset'   : predict_for_dataset + 1,
             'filename'  : str(df_features.index[i]),
             'Loss_MAE'  : predict_results['score']['Loss_mae'].iloc[i],
             'Threshold' : predict_results['score']['Threshold'].iloc[i],
