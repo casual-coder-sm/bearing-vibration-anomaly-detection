@@ -101,7 +101,9 @@ if __name__ == "__main__":
     s3_filepaths={}
 
     counter=0    
+    s3_prev_filepaths={}
     df_st_status = pd.DataFrame()
+    df_st_status_prev = pd.DataFrame()
 
     while not killer.kill_now:
 
@@ -116,30 +118,57 @@ if __name__ == "__main__":
             # if empty then nothing to process. Wait till start receiving device data.
             counter=0
             df_st_status = pd.DataFrame()
+            df_st_status_prev = pd.DataFrame()
             print('Waiting... No Sensor Data.')
             time.sleep(10)
             continue
         else:
-            #Read all S3 objects
-            df_st_status = pd.DataFrame()
-            for key in s3_filepaths:
-                start_time = time.perf_counter()
-                device_status_list[key] = read_from_s3_object(s3_filepaths[key])
-                end_time = time.perf_counter()
-                print(f"Execution time for processing {key} : {end_time-start_time}")
-                print(device_status_list[key].shape, device_status_list[key].columns)
+            if counter == 0:
+                #Read all S3 objects
+                for key in s3_filepaths:
+                    start_time = time.perf_counter()
+                    device_status_list[key] = read_from_s3_object(s3_filepaths[key])
+                    end_time = time.perf_counter()
+                    print(f"Execution time for processing {key} : {end_time-start_time}")
+                    print(device_status_list[key].shape, device_status_list[key].columns)
 
-                # write output for streamlit dataframe
-                df_in = device_status_list[key]
-                df_out=pd.DataFrame(df_in[-1:],columns=df_in.columns)
-                df_st_status = pd.concat([df_st_status, df_out], axis=0)
+                    # write output for streamlit dataframe
+                    df_st_status =pd.DataFrame(device_status_list[key][-1:],columns=device_status_list[key].columns)
 
-            df_st_status = df_st_status.reset_index().drop(columns=['index'])
-            write_to_s3_bucket(df_st_status)
-            print('-'*80)
-            print('counter', counter)
-            print(df_st_status)
-            time.sleep(1)
+                    df_st_status = df_st_status.reset_index().drop(columns=['index'])
+                    write_to_s3_bucket(df_st_status)
+            else:
+                #Read only added newly
+                s3_updated_filepaths = get_updated_s3_bucket_object_keys(s3_prev_filepaths, counter)
+                if len(s3_updated_filepaths) > 0:
+                    df_st_status = pd.DataFrame()
+
+                for key in s3_updated_filepaths:
+                    start_time = time.perf_counter()
+                    device_status_list[key] = read_from_s3_object(s3_filepaths[key], device_status_list[key])
+                    end_time = time.perf_counter()
+                    #print(f"Execution time for processing {key} : {end_time-start_time}")
+                    print(device_status_list[key].shape, device_status_list[key].columns)
+
+                    # write output for streamlit dataframe
+                    df_in = device_status_list[key]
+                    df_out=pd.DataFrame(df_in[-1:],columns=df_in.columns)
+                    df_st_status = pd.concat([df_st_status, df_out], axis=0)
+
+
+                #check if there is anything updated newly                
+                if len(s3_updated_filepaths) > 0:
+                    df_st_status = df_st_status.reset_index().drop(columns=['index'])
+                    write_to_s3_bucket(df_st_status)
+                    print('Updated device live status\n', df_st_status)
+                    print('-'*80)
+                else:
+                    print('No Update; Skip storing device live status')
+                    time.sleep(10)
+
+            # save the context
+            s3_prev_filepaths = s3_filepaths.copy()
+            df_st_status_prev = df_st_status.copy()
             counter = counter + 1
         
     print('End of the program. Exited Gracefully')
