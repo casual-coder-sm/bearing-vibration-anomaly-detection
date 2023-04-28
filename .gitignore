@@ -134,3 +134,4 @@ aws
 capstone-data
 models.zip
 scripts_mimic_iot.zip
+device_live_status.csv
