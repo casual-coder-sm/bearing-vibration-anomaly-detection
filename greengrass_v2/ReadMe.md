@@ -71,20 +71,32 @@ https://docs.aws.amazon.com/greengrass/v2/developerguide/getting-started.html
 
 ## Stoping/Pausing common IoT Device Services
 /greengrass/v2/bin/greengrass-cli component stop -n=aws.greengrass.Nucleus
+
 /greengrass/v2/bin/greengrass-cli component stop -n=DeploymentService
+
 /greengrass/v2/bin/greengrass-cli component stop -n=UpdateSystemPolicyService
+
 /greengrass/v2/bin/greengrass-cli component stop -n=FleetStatusService
+
 /greengrass/v2/bin/greengrass-cli component stop -n=TelemetryAgent
+
 /greengrass/v2/bin/greengrass-cli component stop -n=aws.greengrass.LocalDebugConsole
+
 /greengrass/v2/bin/greengrass-cli component stop -n=aws.greengrass.Cli
         
 ## Restart/Resume common IoT Device Services
 /greengrass/v2/bin/greengrass-cli component restart -n=aws.greengrass.Nucleus
+
 /greengrass/v2/bin/greengrass-cli component restart -n=aws.greengrass.Cli
+
 /greengrass/v2/bin/greengrass-cli component restart -n=DeploymentService
+
 /greengrass/v2/bin/greengrass-cli component restart -n=UpdateSystemPolicyService
+
 /greengrass/v2/bin/greengrass-cli component restart -n=FleetStatusService
+
 /greengrass/v2/bin/greengrass-cli component restart -n=TelemetryAgent
+
 /greengrass/v2/bin/greengrass-cli component restart -n=aws.greengrass.LocalDebugConsole
 
 /greengrass/v2/bin/greengrass-cli component restart -n=bearing_vibration_anomaly_detection
